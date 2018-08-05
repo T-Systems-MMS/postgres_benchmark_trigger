@@ -1,20 +1,48 @@
 - hosts: localhost
   tasks:
-  - name: insall postgres 10 repo
+  - name: install postgres 10 repo
     yum:
       name: https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-centos10-10-2.noarch.rpm
 
-  - name: insall postgres 10 server
+  - name: install postgres 10 server
     yum:
-      name: postgresql10-server
+      name:
+      - postgresql10-server
+      - postgresql10-contrib
+
+  - name: install ansible requirements
+    yum:
+      name: python-psycopg2
 
   # steps from /usr/share/doc/postgresql10-10.4/README.rpm-dist
   - name: init db
     shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
     ignore_errors: yes
 
+  - name: include stats module
+    lineinfile:
+      path: /var/lib/pgsql/10/data/postgresql.conf
+      regexp: '^shared_preload_libraries ='
+      line: "shared_preload_libraries = 'pg_stat_statements'"
+
   - name: start postgres
     systemd:
       name: postgresql-10.service
       enabled: yes
       state: started
+
+  - name: create root user
+    postgresql_user:
+      name: root
+      role_attr_flags: SUPERUSER
+
+  - name: create benchmark DB
+    postgresql_db:
+      name: benchmark
+
+  - name: load stats module
+    shell: psql benchmark -c 'CREATE EXTENSION pg_stat_statements;'
+
+#  - name: remove benchmark DB
+#    postgresql_db:
+#      name: benchmark
