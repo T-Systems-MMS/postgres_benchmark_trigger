@@ -42,6 +42,10 @@
 
   - name: load stats module
     shell: psql benchmark -c 'CREATE EXTENSION pg_stat_statements;'
+    ignore_errors: yes
+
+  - name: Execute SQL to create tables
+    shell: "psql benchmark -f /vagrant/sql/create_db.sql"
 
 #  - name: remove benchmark DB
 #    postgresql_db:
