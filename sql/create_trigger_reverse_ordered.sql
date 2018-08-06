@@ -15,9 +15,9 @@ BEGIN
         , '1 week'::interval) dd
   ORDER BY datestring DESC
   LOOP
-    stmt := stmt || 'IF (NEW.ts >= timestamp ''' || createtable.datestart || ''' AND NEW.ts < timestamp ''' || createtable.dateend || ''') THEN INSERT INTO messages_' || createtable.datestring || ' VALUES (NEW.*); ELS';
+    stmt := stmt || 'IF (NEW.ts >= timestamp ''' || createtable.datestart || ''' AND NEW.ts < timestamp ''' || createtable.dateend || ''') THEN INSERT /* inner query */ INTO messages_' || createtable.datestring || ' VALUES (NEW.*); ELS';
   END LOOP;
-  stmt := 'CREATE FUNCTION test_trigger() RETURNS trigger AS $trigger$ BEGIN ' || stmt || 'E INSERT INTO messages VALUES (NEW.*); END IF; RETURN NULL; END; $trigger$ LANGUAGE plpgsql;';
+  stmt := 'CREATE FUNCTION test_trigger() RETURNS trigger AS $trigger$ BEGIN ' || stmt || 'E INSERT /* inner query */ INTO messages VALUES (NEW.*); END IF; RETURN NULL; END; $trigger$ LANGUAGE plpgsql;';
   EXECUTE stmt;
 END;
 $$

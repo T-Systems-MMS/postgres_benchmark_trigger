@@ -1,0 +1,47 @@
+- hosts: localhost
+  tasks:
+  - name: Clean DB
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/clean_db.sql
+
+  - name: Execute SQL to create table structure
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/create_db.sql
+
+  - name: Execute SQL to create trigger
+    shell:
+      "psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/create_trigger_{{ trigger_type }}.sql"
+
+  - name: Reset statistics
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -c "select pg_stat_statements_reset();"
+
+  - name: Execute curent benchmark
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/benchmark_current_inserts.sql
+
+  - name: gather results
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time FROM pg_stat_statements WHERE query LIKE '% query %' ORDER BY total_time;"
+    register: benchmark_result
+
+  - name: Results
+    debug:
+        var: benchmark_result.stdout_lines
+
+  - name: Execute historical benchmark
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/benchmark_historical_inserts.sql
+
+  - name: gather results
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time FROM pg_stat_statements WHERE query LIKE '% query %' ORDER BY total_time;"
+    register: benchmark_result
+
+  - name: Results
+    debug:
+        var: benchmark_result.stdout_lines
+
+  - name: Reset statistics
+    shell:
+      psql benchmark -v ON_ERROR_STOP=1 -c "select pg_stat_statements_reset();"

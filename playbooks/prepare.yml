@@ -16,7 +16,8 @@
 
   # steps from /usr/share/doc/postgresql10-10.4/README.rpm-dist
   - name: init db
-    shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
+    shell:
+      /usr/pgsql-10/bin/postgresql-10-setup initdb
     ignore_errors: yes
 
   - name: include stats module
@@ -24,6 +25,12 @@
       path: /var/lib/pgsql/10/data/postgresql.conf
       regexp: '^shared_preload_libraries ='
       line: "shared_preload_libraries = 'pg_stat_statements'"
+
+  - name: configure stats module
+    lineinfile:
+      path: /var/lib/pgsql/10/data/postgresql.conf
+      regexp: '^pg_stat_statements.track ='
+      line: "pg_stat_statements.track = 'all'"
 
   - name: start postgres
     systemd:
@@ -42,14 +49,6 @@
 
   - name: load stats module
     shell:
-      psql benchmark -c "CREATE EXTENSION pg_stat_statements;"
-      psql benchmark -c "SET pg_stat_statements.track = 'all';"
-      psql benchmark -c "select pg_reload_conf();"
+      psql benchmark -v ON_ERROR_STOP=1 -c "CREATE EXTENSION pg_stat_statements;"
+      psql benchmark -v ON_ERROR_STOP=1 -c "select pg_reload_conf();"
     ignore_errors: yes
-
-  - name: Execute SQL to create tables
-    shell: "psql benchmark -f /vagrant/sql/create_db.sql"
-
-#  - name: remove benchmark DB
-#    postgresql_db:
-#      name: benchmark

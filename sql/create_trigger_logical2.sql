@@ -3,10 +3,10 @@ CREATE FUNCTION test_trigger()
 DECLARE
   tablename VARCHAR;
 BEGIN
-  tablename := to_regclass(concat('messages_',to_char(NEW.ts::date, 'YYYY_WW')))::varchar;
-  IF ( length(tablename) > 0) THEN
-    EXECUTE 'INSERT /* inner query */ INTO ' || tablename || ' VALUES ($1.*)' USING NEW;
-    RETURN NULL;
+  tablename := concat('messages_',to_char(NEW.ts::date, 'YYYY_WW'));
+  IF ( to_regclass(tablename) IS NOT NULL) THEN
+    EXECUTE ' INSERT /* inner query */ INTO ' || tablename || ' VALUES ($1.*)' USING NEW;
+   RETURN NULL;
   END IF;
   RETURN NEW;
 END;
