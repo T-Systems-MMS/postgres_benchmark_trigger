@@ -1,10 +1,10 @@
 # Postgres Benchmark Trigger
 
-## purpose & description
+## Purpose & Description
 This is a benchmark to verify if we can improve one specific trigger in our postgres DB.
 The trigger is used to distribute recorts to various child tables (split by calendar week).
 
-## current solution
+## Current Solution
 
 We currently have a trigger in this form:
 
@@ -30,16 +30,16 @@ LANGUAGE plpgsql;
 This is one mayor contributor for our insert performance, because with every insert we execute a lot of `IF` statements and usually we insert records with a current timestamp. 
 Therefore we will traverse almost all `IF` statements in this trigger, before actually inserting a row.
 
-## approach
+## Approach
 Since we mostly insert with current timestamps the order of the `IF` statements could be reversed. 
 The best case however would be, if there was a dynamic approach, where we have a constant time lookup for the table.
 
 The reverse order approach is implemented in `sql/create_trigger_reverse_ordered.sql`.
-The logical selection approach is implekmented in `sql/create_trigger_logical.sql` and an alternative in `sql/create_trigger_logical2.sql`
+The logical selection approach is implemented in `sql/create_trigger_logical.sql` and an alternative in `sql/create_trigger_logical2.sql`.
 
 The benchmark is done in a VM on my laptop, so the results are not 100% exact and reproducible, but the order of magnitue should be comparable.
 
-# results
+# Results
 
 | implementation	| current inserts  	| time per insert   | max insert time   | historic inserts  | time per insert  	| max insert time   |
 |---	            |---	            |---	            |---                |---	            |---	            |---                |
@@ -48,10 +48,10 @@ The benchmark is done in a VM on my laptop, so the results are not 100% exact an
 | logical  	        |  2699 ms          | 0.026 ms          | 1.146 ms          |  2764 ms 	        | 0.028 ms         	| 1.154 ms          |
 | logical2 	        |  2586 ms 	        | 0.025 ms          | 0.898 ms          |  2579 ms          | 0.026 ms         	| 1.045 ms    	    |
 
-We see, that the current implementation is especially bad for inserts with current timestamps. If performs a bit better, if we use historical timestamps.
+We see that the current implementation is especially bad for inserts with current timestamps. `IF` performs a bit better, if we use historical timestamps.
 The reverse implementation is already much better for current timestamps, but degrades quickly for historical timestamps.
-The logical implementation shosa almost constant runtime and superior performance in all testcases.
+The logical implementation shows almost constant runtime and superior performance in all testcases.
 
-# replication
+# Replication
 Start your VM with `vagrant up`
-Benchmarks can be executed with `ansible-playbook /vagrant/playbooks/benchmark.yml -e trigger_type=<type>` (trigger_type can be: default_ordered, reverse_ordered, logical, logical2) 
+Benchmarks can be executed with `ansible-playbook /vagrant/playbooks/benchmark.yml -e trigger_type=<type>` (trigger_type can be: `default_ordered`, `reverse_ordered`, `logical`, `logical2`) 
