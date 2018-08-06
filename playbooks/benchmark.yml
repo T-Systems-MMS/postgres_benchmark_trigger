@@ -16,13 +16,13 @@
     shell:
       psql benchmark -v ON_ERROR_STOP=1 -c "select pg_stat_statements_reset();"
 
-  - name: Execute curent benchmark
+  - name: Execute current benchmark
     shell:
       psql benchmark -v ON_ERROR_STOP=1 -f /vagrant/sql/benchmark_current_inserts.sql
 
   - name: gather results
     shell:
-      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time FROM pg_stat_statements WHERE query LIKE '% query %' ORDER BY total_time;"
+      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time, total_time/calls FROM pg_stat_statements WHERE query LIKE '% outer query %' ORDER BY total_time;"
     register: benchmark_result
 
   - name: Results
@@ -35,7 +35,7 @@
 
   - name: gather results
     shell:
-      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time FROM pg_stat_statements WHERE query LIKE '% query %' ORDER BY total_time;"
+      psql benchmark -v ON_ERROR_STOP=1 -c "SELECT query, calls, total_time, total_time/calls FROM pg_stat_statements WHERE query LIKE '% outer query %' ORDER BY total_time;"
     register: benchmark_result
 
   - name: Results
