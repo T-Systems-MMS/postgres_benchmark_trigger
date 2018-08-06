@@ -18,13 +18,13 @@ BEGIN
     INSERT /* inner query */ INTO messages_2015_05 VALUES (NEW.*); 
   IF (NEW.ts >= timestamp '2015-02-02'::date AND NEW.ts < timestamp '2015-02-09'::date) THEN 
     INSERT /* inner query */ INTO messages_2015_06 VALUES (NEW.*); 
-...
+-- ...
   ELSE 
     INSERT /* inner query */ INTO messages VALUES (NEW.*); 
   END IF; 
   RETURN NULL; 
 END; $trigger$ 
-LANGUAGE plpgsql;';
+LANGUAGE plpgsql;
 ````
 
 This is one mayor contributor for our insert performance, because with every insert we execute a lot of `IF` statements and usually we insert records with a current timestamp. 
@@ -41,12 +41,12 @@ The benchmark is done in a VM on my laptop, so the results are not 100% exact an
 
 # results
 
-| implementation	| current inserts  	| time per insert  	| historic inserts  	| time per insert  	|
-|---	            |---	            |---	            |---	                |---	            |
-| default	        | 96837 ms          | 0.96 ms           | 48722 ms  	        | 0.49 ms  	        |
-| reverse  	        |  4210 ms 	        | 0.04 ms       	| 50589 ms  	        | 0.51 ms  	        |
-| logical  	        |  2747 ms          | 0.02 ms           |  2732 ms 	            | 0.02 ms         	|
-| logical2 	        |  2640 ms 	        | 0.02 ms           |  2657 ms           	| 0.02 ms         	|
+| implementation	| current inserts  	| time per insert   | max insert time   | historic inserts  | time per insert  	| max insert time   |
+|---	            |---	            |---	            |---                |---	            |---	            |---                |
+| default	        | 98067 ms          | 0.980 ms          | 9.713 ms          | 47382 ms  	    | 0.483 ms          | 2.890 ms          |
+| reverse  	        |  4105 ms 	        | 0.041 ms          | 1.872 ms	        | 48440 ms  	    | 0.493 ms  	    | 9.614 ms          |
+| logical  	        |  2699 ms          | 0.026 ms          | 1.146 ms          |  2764 ms 	        | 0.028 ms         	| 1.154 ms          |
+| logical2 	        |  2586 ms 	        | 0.025 ms          | 0.898 ms          |  2579 ms          | 0.026 ms         	| 1.045 ms    	    |
 
 We see, that the current implementation is especially bad for inserts with current timestamps. If performs a bit better, if we use historical timestamps.
 The reverse implementation is already much better for current timestamps, but degrades quickly for historical timestamps.
