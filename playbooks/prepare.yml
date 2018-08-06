@@ -41,7 +41,10 @@
       name: benchmark
 
   - name: load stats module
-    shell: psql benchmark -c 'CREATE EXTENSION pg_stat_statements;'
+    shell:
+      psql benchmark -c "CREATE EXTENSION pg_stat_statements;"
+      psql benchmark -c "SET pg_stat_statements.track = 'all';"
+      psql benchmark -c "select pg_reload_conf();"
     ignore_errors: yes
 
   - name: Execute SQL to create tables

@@ -20,7 +20,10 @@ LANGUAGE plpgsql;
 
 DROP TABLE IF EXISTS messages CASCADE;
 
-CREATE TABLE IF NOT EXISTS messages( ts timestamp, pl int);
+CREATE TABLE IF NOT EXISTS messages (
+  ts TIMESTAMP,
+  pl INT
+);
 SELECT create_partition_tables();
 
 DROP FUNCTION IF EXISTS create_partition_tables();
